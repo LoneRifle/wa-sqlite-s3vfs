@@ -1,0 +1,33 @@
+{
+  "name": "wa-sqlite-s3vfs",
+  "version": "0.0.0",
+  "description": "A Virtual File System for wa-sqlite, backed by an S3 bucket",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "test": "echo \"No tests implemented\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LoneRifle/wa-sqlite-s3vfs.git"
+  },
+  "keywords": [
+    "sqlite",
+    "s3"
+  ],
+  "author": "LoneRifle <LoneRifle@users.noreply@github.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/LoneRifle/wa-sqlite-s3vfs/issues"
+  },
+  "homepage": "https://github.com/LoneRifle/wa-sqlite-s3vfs#readme",
+  "peerDependencies": {
+    "wa-sqlite": "github:rhashimoto/wa-sqlite#buildless"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.154.0"
+  },
+  "devDependencies": {
+    "typescript": "^4.7.4"
+  }
+}

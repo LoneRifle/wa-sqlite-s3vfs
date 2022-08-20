@@ -1,0 +1,19 @@
+{
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "**/jest.config.ts", "build", "**/*spec.ts"],
+  "compilerOptions": {
+    "strict": true,
+    "strictPropertyInitialization": false,
+    "esModuleInterop": true,
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": true,
+    "target": "es6",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./src",
+    "incremental": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  }
+}
