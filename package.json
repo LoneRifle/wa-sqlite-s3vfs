@@ -25,9 +25,12 @@
     "wa-sqlite": "github:rhashimoto/wa-sqlite#buildless"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.154.0"
+    "@aws-sdk/client-s3": "^3.154.0",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
+    "@types/node": "*",
+    "@types/uuid": "^8.3.4",
     "typescript": "^4.7.4"
   }
 }
