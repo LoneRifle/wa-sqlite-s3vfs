@@ -16,7 +16,7 @@
     "s3"
   ],
   "author": "LoneRifle <LoneRifle@users.noreply@github.com>",
-  "license": "MIT",
+  "license": "GPL3",
   "bugs": {
     "url": "https://github.com/LoneRifle/wa-sqlite-s3vfs/issues"
   },
