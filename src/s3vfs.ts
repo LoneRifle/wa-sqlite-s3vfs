@@ -7,6 +7,7 @@ import {
   SQLITE_ACCESS_EXISTS,
   SQLITE_ERROR,
   SQLITE_OPEN_DELETEONCLOSE,
+  SQLITE_IOERR_SHORT_READ,
 } from 'wa-sqlite'
 import { Base } from 'wa-sqlite/src/VFS.js'
 
@@ -221,8 +222,16 @@ export class S3VFS extends Base {
             return buffer.subarray(start, start + consume)
           })
         )
-        pData.value.set(Buffer.concat(buffers))
-        return SQLITE_OK
+        const buffer = Buffer.concat(buffers)
+        pData.value.set(buffer)
+        const padLength = pData.size - buffer.length
+        if (padLength > 0) {
+          // Pad the shortfall with zeros
+          pData.value.set(new Array(padLength).fill(0), buffer.length)
+          return SQLITE_IOERR_SHORT_READ 
+        } else {
+          return SQLITE_OK
+        }
       } catch (error) {
         return SQLITE_ERROR
       }
