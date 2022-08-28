@@ -283,7 +283,7 @@ export class S3VFS extends Base {
               dataToWrite = Buffer.concat([
                 originalBlockBytesPadded.subarray(0, start),
                 dataToWrite,
-                originalBlockBytesPadded.subarray(0 + write)
+                originalBlockBytesPadded.subarray(0 + start + write)
               ])
             }
             dataOffset += write
