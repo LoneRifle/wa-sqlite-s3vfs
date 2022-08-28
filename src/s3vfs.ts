@@ -6,6 +6,7 @@ import {
   SQLITE_OK, 
   SQLITE_ACCESS_EXISTS,
   SQLITE_ERROR,
+  SQLITE_OPEN_DELETEONCLOSE,
 } from 'wa-sqlite'
 import { Base } from 'wa-sqlite/src/VFS.js'
 
@@ -21,7 +22,7 @@ export const LOCK_PAGE_OFFSET = 1073741824
 
 export class S3VFS extends Base {
   private readonly mapIdToPrefix = new Map<number, string>()
-  private readonly prefixToStatus = new Map<string, 'open' | 'closed'>()
+  private readonly prefixToFlags = new Map<string, number>()
 
   constructor(
     private readonly s3: S3,
@@ -44,7 +45,7 @@ export class S3VFS extends Base {
           Prefix: `${name}/`,
         })
         const result = 
-          Number(objects?.length) > 0 || [...this.prefixToStatus.keys()].includes(name)
+          Number(objects?.length) > 0 || [...this.prefixToFlags.keys()].includes(name)
             ? 1 
             : 0
         pResOut.set(result)
@@ -67,7 +68,7 @@ export class S3VFS extends Base {
           Key: key,
         })
       }
-      this.prefixToStatus.delete(name)
+      this.prefixToFlags.delete(name)
       return SQLITE_OK
     })
   }
@@ -77,20 +78,25 @@ export class S3VFS extends Base {
       if (!this.mapIdToPrefix.has(fileId)) {
         const prefix = `${name}`.split('/').pop() || v4()
         this.mapIdToPrefix.set(fileId, prefix)
-        this.prefixToStatus.set(prefix, 'open')
+        this.prefixToFlags.set(prefix, flags)
       }
       pOutFlags.set(flags)
       return SQLITE_OK
     })
   }
 
-  xClose(fileId: number): number {
-    const name = this.mapIdToPrefix.get(fileId)
-    this.mapIdToPrefix.delete(fileId)
-    if (name) {
-      this.prefixToStatus.set(name, 'closed')
-    }
-    return SQLITE_OK
+  xClose(fileId: number): Promise<number> {
+    return this.handleAsync(async () => {
+      const name = this.mapIdToPrefix.get(fileId)
+      this.mapIdToPrefix.delete(fileId)
+      if (name) {
+        const flags = this.prefixToFlags.get(name)
+        if (flags && flags & SQLITE_OPEN_DELETEONCLOSE) {
+          await this.xDelete(name, 0)
+        }
+      }
+      return SQLITE_OK
+    })
   }
 
   private async fetchObjects(fileId: number) {
