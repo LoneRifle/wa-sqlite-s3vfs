@@ -8,7 +8,8 @@ import * as localstackConfig from '../../jest.localstack'
 
 const SKIP = [
   TEST.BATCH_ATOMIC,
-  TEST.CONTENTION
+  TEST.CONTENTION,
+  TEST.REBLOCK,
 ]
 
 const s3 = new S3({
