@@ -165,10 +165,14 @@ export class S3VFS extends Base {
     })
   }
 
+  private blockId(block: number) {
+    return ('0000000000'+block).slice(-10)
+  }
+
   private blockObject(prefix: string, block: number) {
     return this.s3.getObject({
       Bucket: this.bucketName,
-      Key: `${prefix}/${('0000000000'+block).slice(-10)}`,
+      Key: `${prefix}/${this.blockId(block)}`,
     })
   }
 
@@ -241,7 +245,7 @@ export class S3VFS extends Base {
             writePromises.push(
               this.s3.putObject({
                 Bucket: this.bucketName,
-                Key: `${prefix}/${block}`,
+                Key: `${prefix}/${this.blockId(block)}`,
                 Body: Buffer.concat([
                   originalBlockBytes, 
                   Buffer.alloc(this.blockSize - originalBlockBytes.length),
@@ -270,7 +274,7 @@ export class S3VFS extends Base {
             dataOffset += write
             return this.s3.putObject({
               Bucket: this.bucketName,
-              Key: `${prefix}/${block}`,
+              Key: `${prefix}/${this.blockId(block)}`,
               Body: dataToWrite,
             })
           }
