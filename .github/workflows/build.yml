@@ -1,0 +1,20 @@
+name: build
+
+on:
+  push:
+  pull_request:
+    types: [opened, reopened]
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@HEAD
+      - uses: actions/setup-node@HEAD
+      - run: npm ci
+      - run: npm run build
+      - run: npm test -- --coverage
+      - name: Coveralls
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
