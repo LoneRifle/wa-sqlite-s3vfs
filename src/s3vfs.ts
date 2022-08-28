@@ -20,13 +20,14 @@ export const DEFAULT_PAGE_SIZE = 4096
 export const LOCK_PAGE_OFFSET = 1073741824
 
 export class S3VFS extends Base {
-  readonly name = `s3vfs-${v4()}`
-  readonly mapIdToPrefix = new Map<number, string>()
+  private readonly mapIdToPrefix = new Map<number, string>()
+  private readonly prefixToStatus = new Map<string, 'open' | 'closed'>()
 
   constructor(
     private readonly s3: S3,
     private readonly bucketName: string,
-    private readonly blockSize = DEFAULT_PAGE_SIZE
+    private readonly blockSize = DEFAULT_PAGE_SIZE,
+    readonly name = `s3vfs-${bucketName}-${v4()}`,
   ){
     super()
   }
@@ -42,7 +43,11 @@ export class S3VFS extends Base {
           Bucket: this.bucketName, 
           Prefix: `${name}/`,
         })
-        pResOut.set(Number(objects?.length) > 0 ? 1 : 0)
+        const result = 
+          Number(objects?.length) > 0 || [...this.prefixToStatus.keys()].includes(name)
+            ? 1 
+            : 0
+        pResOut.set(result)
       } else {
         pResOut.set(0)
       }
@@ -62,6 +67,7 @@ export class S3VFS extends Base {
           Key: key,
         })
       }
+      this.prefixToStatus.delete(name)
       return SQLITE_OK
     })
   }
@@ -71,6 +77,7 @@ export class S3VFS extends Base {
       if (!this.mapIdToPrefix.has(fileId)) {
         const prefix = `${name}`.split('/').pop() || v4()
         this.mapIdToPrefix.set(fileId, prefix)
+        this.prefixToStatus.set(prefix, 'open')
       }
       pOutFlags.set(flags)
       return SQLITE_OK
@@ -78,7 +85,11 @@ export class S3VFS extends Base {
   }
 
   xClose(fileId: number): number {
+    const name = this.mapIdToPrefix.get(fileId)
     this.mapIdToPrefix.delete(fileId)
+    if (name) {
+      this.prefixToStatus.set(name, 'closed')
+    }
     return SQLITE_OK
   }
 
@@ -270,6 +281,10 @@ export class S3VFS extends Base {
         return SQLITE_ERROR
       }
     })
+  }
+
+  handleAsync(f: Function) {
+    return f();
   }
 }
 
