@@ -4,7 +4,7 @@ import { configureTests, TEST } from 'wa-sqlite/test/VFSTests'
 import { S3 } from '@aws-sdk/client-s3'
 
 // @ts-ignore
-import * as localstackConfig from '../../jest.localstack'
+import * as localstackConfig from '../../jest.localstack.js'
 
 const SKIP = [
   TEST.BATCH_ATOMIC,

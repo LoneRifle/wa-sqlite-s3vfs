@@ -1,6 +1,7 @@
 {
   "name": "wa-sqlite-s3vfs",
   "version": "0.0.0",
+  "type": "module",
   "description": "A Virtual File System for wa-sqlite, backed by an S3 bucket",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
