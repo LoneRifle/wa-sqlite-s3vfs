@@ -1,4 +1,4 @@
-import { S3VFS } from '..'
+import { S3VFS } from '../s3vfs'
 // @ts-ignore
 import { configureTests, TEST } from 'wa-sqlite/test/VFSTests'
 import { S3 } from '@aws-sdk/client-s3'
