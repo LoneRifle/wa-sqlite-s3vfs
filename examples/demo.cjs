@@ -22,7 +22,7 @@ module.exports = async function() {
 
   const currentDirName = globalThis.__dirname
   const originalRequire = globalThis.require
-  const sqliteDistPath = 'node_modules/wa-sqlite/dist'
+  const sqliteDistPath = '../node_modules/wa-sqlite/dist'
 
   if (typeof process === 'object') {
     const { createRequire } = await import('module')
