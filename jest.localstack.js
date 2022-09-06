@@ -4,7 +4,10 @@ module.exports = {
   showLog: true,
   S3Buckets: [
     {
-      Bucket: 'test',
+      Bucket: 'unit',
+    },
+    {
+      Bucket: 'integration',
     },
   ],
 }
