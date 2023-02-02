@@ -1,7 +1,7 @@
 import { NoSuchKey, S3 } from '@aws-sdk/client-s3'
-import { v4 } from 'uuid'
+import { defBase } from '@thi.ng/base-n'
 import { Readable } from 'stream'
-
+import { v4 } from 'uuid'
 import { 
   SQLITE_OK, 
   SQLITE_ACCESS_EXISTS,
@@ -10,6 +10,8 @@ import {
   SQLITE_IOERR_SHORT_READ,
 } from 'wa-sqlite'
 import { Base } from 'wa-sqlite/src/VFS.js'
+
+const base36 = defBase('0123456789abcdefghijklmnopqrstuvwxyz')
 
 /**
  * The default page size used by sqlite
@@ -24,12 +26,16 @@ export const LOCK_PAGE_OFFSET = 1073741824
 export class S3VFS extends Base {
   private readonly mapIdToPrefix = new Map<number, string>()
   private readonly prefixToFlags = new Map<string, number>()
+  readonly maxFilename = ''.padStart(this.filenameLength, 'z')
+  readonly maxFileNumber = base36.decodeBigInt(this.maxFilename)
+  readonly blockSizeN = BigInt(this.blockSize)
 
   constructor(
     private readonly s3: S3,
     private readonly bucketName: string,
     private readonly blockSize = DEFAULT_PAGE_SIZE,
     readonly name = `s3vfs-${bucketName}-${v4()}`,
+    readonly filenameLength = 10,
   ){
     super()
   }
@@ -126,8 +132,13 @@ export class S3VFS extends Base {
     return this.handleAsync(async () => {
       try {
         const objects = await this.fetchObjects(fileId)
-        const size = (objects || []).reduce((size, { Size: blockSize }) => size + (blockSize || 0), 0)
-        pSize64.set(size)
+        // Capture the last non-slash characters
+        const filename = objects?.[0]?.Key?.match(/([^/]*)$/)?.[0];
+        // console.log(filename);
+        // Use BigInt to avoid precision problems with Number
+        const fileCount = filename ? base36.decodeBigInt(filename) : 0;
+        const size = fileCount ? (fileCount * this.blockSizeN) + this.blockSizeN : 0;
+        pSize64.set(Number(size))
         return SQLITE_OK
       } catch (error) {
         pSize64.set(0)
@@ -173,7 +184,11 @@ export class S3VFS extends Base {
   }
 
   private blockId(block: number) {
-    return ('0000000000'+block).slice(-10)
+    if(block > this.maxFileNumber) {
+      throw new Error(`File block number ${block} too great`)
+    }
+    const blockN = this.maxFileNumber - BigInt(block)
+    return base36.encodeBigInt(blockN);
   }
 
   private blockObject(prefix: string, block: number) {
