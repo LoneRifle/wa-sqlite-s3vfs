@@ -24,6 +24,7 @@ export const LOCK_PAGE_OFFSET = 1073741824
 export class S3VFS extends Base {
   private readonly mapIdToPrefix = new Map<number, string>()
   private readonly prefixToFlags = new Map<string, number>()
+  readonly maxFileNumber = 9999999999
 
   constructor(
     private readonly s3: S3,
@@ -126,7 +127,11 @@ export class S3VFS extends Base {
     return this.handleAsync(async () => {
       try {
         const objects = await this.fetchObjects(fileId)
-        const size = (objects || []).reduce((size, { Size: blockSize }) => size + (blockSize || 0), 0)
+        // Capture the last non-slash characters
+        const filename = objects?.[0]?.Key?.match(/([^/]*)$/)?.[0];
+        const fileNumber = filename ? parseInt(filename) : this.maxFileNumber;
+        const fileCount = this.maxFileNumber - fileNumber
+        const size = fileCount ? (fileCount * this.blockSize) + this.blockSize : 0;
         pSize64.set(size)
         return SQLITE_OK
       } catch (error) {
@@ -173,7 +178,11 @@ export class S3VFS extends Base {
   }
 
   private blockId(block: number) {
-    return ('0000000000'+block).slice(-10)
+    if(block > this.maxFileNumber) {
+      throw new Error(`File block number ${block} too great`)
+    }
+    const reverseBlock = this.maxFileNumber - block
+    return ('0000000000'+reverseBlock).slice(-10)
   }
 
   private blockObject(prefix: string, block: number) {
